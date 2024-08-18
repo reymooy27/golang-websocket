@@ -1,8 +1,15 @@
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+
+type Data = {
+  message: string;
+  status: string;
+  timestamp: Date;
+};
 
 function App() {
-  const [data, setData] = useState<string>("");
+  const [data, setData] = useState<Data[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  console.log(data);
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8000");
@@ -13,8 +20,7 @@ function App() {
     };
 
     ws.onmessage = (event) => {
-      setData(event.data);
-      console.log("msg: ", event.data);
+      setData((prev) => [...prev, JSON.parse(event.data)]);
     };
 
     ws.onclose = (event) => {
@@ -30,15 +36,45 @@ function App() {
 
   const [message, setMessage] = useState("");
 
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    socket?.send(
+      JSON.stringify({
+        message,
+        status: "success",
+        timestamp: Date.now(),
+      }),
+    );
+    setMessage("");
+  };
+
   return (
-    <div>
-      <form className="form">
-        <div>
-          <input className="input" type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
-        </div>
-        <button className="btn" onClick={() => socket?.send(message)}>Click</button>
+    <div className="container">
+      <form className="form" onSubmit={handleSubmit}>
+        <input
+          className="input"
+          placeholder="Enter message"
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <button disabled={message === ""} className="btn">
+          Send Message
+        </button>
       </form>
-      <span>{data}</span>
+      <div>
+        {data
+          .sort(
+            (a, b) =>
+              parseInt(b.timestamp.toString()) -
+              parseInt(a.timestamp.toString()),
+          )
+          .map((item) => (
+            <div key={JSON.stringify(item.timestamp)}>
+              <h5>{item.message}</h5>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }

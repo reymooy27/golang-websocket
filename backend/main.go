@@ -55,7 +55,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		log.Println(msg)
+		log.Println(string(msg))
 		broadcastMessage(msg, msgType)
 	}
 }

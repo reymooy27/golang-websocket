@@ -18,6 +18,24 @@ type Body struct {
 	Message string `json:"message"`
 }
 
+type Game struct {
+	Players map[*websocket.Conn]bool
+}
+
+var game = Game{
+	Players: make(map[*websocket.Conn]bool),
+}
+
+func broadcastMessage(m []byte, msgType int) {
+	for player := range game.Players {
+		if err := player.WriteMessage(msgType, m); err != nil {
+			log.Println("err broadcasting ", err)
+			player.Close()
+			delete(game.Players, player)
+		}
+	}
+}
+
 func echo(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -28,18 +46,17 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
+	game.Players[c] = true
+
 	for {
-		mType, message, err := c.ReadMessage()
+		msgType, msg, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			log.Println("cannot read json ", err)
 			break
 		}
 
-		err = c.WriteMessage(mType, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
+		log.Println(msg)
+		broadcastMessage(msg, msgType)
 	}
 }
 

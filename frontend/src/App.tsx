@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import "./App.css";
 
 function App() {
   const [data, setData] = useState<string>("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
-  //
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8000");
     setSocket(ws);
@@ -30,10 +28,17 @@ function App() {
     return () => ws.close();
   }, []);
 
+  const [message, setMessage] = useState("");
+
   return (
     <div>
+      <form className="form">
+        <div>
+          <input className="input" type="text" value={message} onChange={(e) => setMessage(e.target.value)} />
+        </div>
+        <button className="btn" onClick={() => socket?.send(message)}>Click</button>
+      </form>
       <span>{data}</span>
-      <button onClick={() => socket?.send("hello")}>Click</button>
     </div>
   );
 }

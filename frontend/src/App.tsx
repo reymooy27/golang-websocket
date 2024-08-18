@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
   const [data, setData] = useState<string>("");
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
   //
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8000");
+    setSocket(ws);
 
     ws.onopen = (event) => {
       console.log(event.type);
@@ -26,17 +27,13 @@ function App() {
       console.log(event.type);
     };
 
-    if (buttonRef != null) {
-      buttonRef?.current.addEventListener("click", () => {
-        ws.send("hello");
-      });
-    }
+    return () => ws.close();
   }, []);
 
   return (
     <div>
       <span>{data}</span>
-      <button ref={buttonRef}>Click</button>
+      <button onClick={() => socket?.send("hello")}>Click</button>
     </div>
   );
 }

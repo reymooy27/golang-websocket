@@ -28,11 +28,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer c.Close()
 
-	msg := []byte("hello")
-
 	for {
+		mType, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			break
+		}
 
-		err = c.WriteMessage(1, msg)
+		err = c.WriteMessage(mType, message)
 		if err != nil {
 			log.Println("write:", err)
 			break
